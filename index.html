@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Medium Post Converter</title>
+  <style>
+    :root {
+      --purple: #6c63ff;
+      --purple-dark: #5146d9;
+      --bg: #f4f3fb;
+      --white: #ffffff;
+      --gray: #666;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Inter", system-ui, sans-serif;
+      background: var(--bg);
+      color: #242424;
+    }
+    header {
+      padding: 20px;
+      background: linear-gradient(90deg, var(--purple), var(--purple-dark));
+      color: white;
+      font-size: 1.4em;
+      font-weight: 600;
+      text-align: center;
+      border-bottom-left-radius: var(--radius);
+      border-bottom-right-radius: var(--radius);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 15px 20px;
+      justify-content: center;
+    }
+    .toolbar select, 
+    .toolbar button, 
+    .toolbar input[type="file"] {
+      padding: 8px 14px;
+      border: 1px solid #ddd;
+      border-radius: var(--radius);
+      background: var(--white);
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .toolbar button:hover, .toolbar select:hover {
+      border-color: var(--purple);
+      box-shadow: 0 2px 8px rgba(108,99,255,0.2);
+    }
+    .container {
+      display: flex;
+      gap: 20px;
+      padding: 20px;
+      height: calc(100vh - 160px);
+    }
+    textarea, .output {
+      flex: 1;
+      padding: 18px;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 15px;
+      background: var(--white);
+      overflow-y: auto;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      transition: transform 0.2s ease;
+    }
+    textarea:focus {
+      outline: none;
+      transform: scale(1.01);
+      border: 1px solid var(--purple);
+    }
+    textarea {
+      font-family: monospace;
+      resize: none;
+    }
+    .output {
+      font-family: Georgia, "Times New Roman", serif;
+      line-height: 1.7;
+      position: relative;
+    }
+    /* Medium-style preview */
+    .output h1 { font-size: 2.5em; margin: 0.6em 0; font-weight: 700; }
+    .output h2 { font-size: 1.8em; margin: 1em 0 0.5em; font-weight: 600; }
+    .output h3 { font-size: 1.4em; margin: 1em 0 0.5em; font-weight: 600; }
+    .output p { margin: 0 0 1.2em; }
+    .output a { color: var(--purple); text-decoration: none; }
+    .output a:hover { text-decoration: underline; }
+    .output blockquote {
+      border-left: 4px solid #ddd;
+      margin: 1.5em 0;
+      padding-left: 1em;
+      color: #6a6a6a;
+      font-style: italic;
+    }
+    .output ul, .output ol { margin: 1em 0; padding-left: 2em; }
+    .output code {
+      background: #f4f4f4;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.95em;
+    }
+    .output pre code {
+      display: block;
+      padding: 14px;
+      white-space: pre-wrap;
+      border-radius: var(--radius);
+      background: #1e1e2f;
+      color: #eee;
+    }
+    /* Floating copy button inside preview */
+    #copyBtn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: var(--purple);
+      color: white;
+      border: none;
+      font-size: 13px;
+      padding: 6px 10px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: background 0.2s ease;
+    }
+    #copyBtn:hover { background: var(--purple-dark); }
+    /* Drag & Drop */
+    .drop-zone {
+      border: 2px dashed #bbb;
+      border-radius: var(--radius);
+      padding: 30px;
+      text-align: center;
+      color: var(--gray);
+      cursor: pointer;
+      margin: 20px auto;
+      max-width: 600px;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+    .drop-zone.dragover {
+      border-color: var(--purple);
+      background: #f2f0ff;
+    }
+    @media (max-width: 900px) {
+      .container { flex-direction: column; height: auto; }
+      textarea, .output { height: 300px; }
+    }
+  </style>
+</head>
+<body>
+  <header>✨ Medium Post Converter</header>
+
+  <div class="toolbar">
+    <label>File Type:
+      <select id="fileType">
+        <option value="markdown">Markdown (.md)</option>
+        <option value="html">HTML (.html)</option>
+      </select>
+    </label>
+    <input type="file" id="fileInput" accept=".md,.markdown,.html,.htm">
+    <button id="downloadBtn">Download HTML</button>
+  </div>
+
+  <div class="drop-zone" id="dropZone">
+    📂 Drag & Drop your .md or .html file here (or use file picker above)
+  </div>
+
+  <div class="container">
+    <textarea id="input" placeholder="Paste or type your Markdown/HTML here..."></textarea>
+    <div id="output" class="output" contenteditable="true">
+      <button id="copyBtn">Copy</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    const input = document.getElementById("input");
+    const output = document.getElementById("output");
+    const fileType = document.getElementById("fileType");
+    const fileInput = document.getElementById("fileInput");
+    const copyBtn = document.getElementById("copyBtn");
+    const downloadBtn = document.getElementById("downloadBtn");
+    const dropZone = document.getElementById("dropZone");
+
+    // Clean HTML for Medium
+    function cleanHTML(node) {
+      const allowed = [
+        "H1","H2","H3","P","A","BLOCKQUOTE",
+        "UL","OL","LI","PRE","CODE","EM","STRONG","BR"
+      ];
+      if (node.nodeType === Node.TEXT_NODE) return node.textContent;
+
+      if (!allowed.includes(node.nodeName)) {
+        if (["DIV","SPAN"].includes(node.nodeName)) {
+          let frag = "";
+          node.childNodes.forEach(child => { frag += cleanHTML(child); });
+          return `<p>${frag}</p>`;
+        }
+        let frag = "";
+        node.childNodes.forEach(child => { frag += cleanHTML(child); });
+        return frag;
+      }
+
+      let inner = "";
+      node.childNodes.forEach(child => { inner += cleanHTML(child); });
+
+      if (node.nodeName === "A") {
+        let href = node.getAttribute("href") || "#";
+        return `<a href="${href}">${inner}</a>`;
+      }
+      if (node.nodeName === "CODE") {
+        if (node.parentNode && node.parentNode.nodeName === "PRE") {
+          return node.textContent; // preserve raw
+        }
+        return `<code>${inner}</code>`;
+      }
+      if (node.nodeName === "PRE") {
+        return `<pre><code>${inner}</code></pre>`;
+      }
+      return `<${node.nodeName.toLowerCase()}>${inner}</${node.nodeName.toLowerCase()}>`;
+    }
+
+    function convert(text, type) {
+      let html = type === "markdown" ? marked.parse(text) : text;
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, "text/html");
+      let cleaned = "";
+      doc.body.childNodes.forEach(node => { cleaned += cleanHTML(node); });
+      return cleaned;
+    }
+
+    function updatePreview() {
+      output.innerHTML = convert(input.value, fileType.value) + output.querySelector("#copyBtn").outerHTML;
+      // reattach copyBtn listener
+      document.getElementById("copyBtn").addEventListener("click", copyToClipboard);
+    }
+
+    function copyToClipboard() {
+      const range = document.createRange();
+      range.selectNodeContents(output);
+      range.setEndBefore(document.getElementById("copyBtn")); // exclude button
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      document.execCommand("copy");
+      alert("✅ Content copied!");
+    }
+
+    input.addEventListener("input", updatePreview);
+    fileType.addEventListener("change", updatePreview);
+
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        input.value = event.target.result;
+        updatePreview();
+      };
+      reader.readAsText(file);
+    });
+
+    downloadBtn.addEventListener("click", () => {
+      const blob = new Blob([output.innerHTML], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "medium_post.html";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // Drag & Drop
+    dropZone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropZone.classList.add("dragover");
+    });
+    dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
+    dropZone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropZone.classList.remove("dragover");
+      const file = e.dataTransfer.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        input.value = event.target.result;
+        updatePreview();
+      };
+      reader.readAsText(file);
+    });
+  </script>
+</body>
+</html>
