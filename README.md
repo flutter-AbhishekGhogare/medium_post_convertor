@@ -14,5 +14,3 @@ Paste, upload, or drag-and-drop a file, then copy the Medium-styled content dire
 - Drag & Drop file upload
 
 ---
-
-## 📂 Project Structure
